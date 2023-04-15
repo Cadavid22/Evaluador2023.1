@@ -1,4 +1,6 @@
-﻿namespace Evaluator.Logic
+﻿using static System.Runtime.InteropServices.JavaScript.JSType;
+
+namespace Evaluator.Logic
 {
     public class MyEvaluator
     {
@@ -11,6 +13,7 @@
         private static double Calculate(string postfix)
         {
             var stack = new Stack<double>(100);
+            string number = string.Empty;
             for (int i = 0; i < postfix.Length; i++)
             {
                 if (IsOperator(postfix[i]))
@@ -22,16 +25,18 @@
                 }
                 else
                 {
-                    var number = ToDouble(postfix[i]);
-                    stack.Push(number);
+                    if (postfix[i] == '.' || !char.IsSymbol(postfix[i]))
+                    {
+                        number += postfix[i];
+                        if (char.IsSymbol(postfix[i+1]))
+                        {
+                            stack.Push(double.Parse(number));
+                            number = string.Empty;
+                        }
+                    }
                 }
             }
             return stack.Pop();
-        }
-
-        private static double ToDouble(char number)
-        {
-            return (double)number - 48;
         }
 
         private static double Calculate(double number1, char @operator, double number2)
@@ -53,7 +58,7 @@
             var postfix = string.Empty;
             for (int i = 0; i < infix.Length; i++)
             {
-                if (IsOperator(infix[i]))
+                if (IsOperator(infix[i]) && !IsOperator(infix[i+1]))
                 {
                     if (stack.IsEmpty)
                     {
@@ -83,9 +88,28 @@
                         }
                     }
                 }
+                else if (IsOperator(infix[i]) && IsOperator(infix[i + 1]))
+                {
+                    throw new Exception("Cannot have multiple operators, please only use one for a operation");
+                }
                 else
                 {
-                    postfix += infix[i];
+                    if (i + 1 < infix.Length)
+                    {
+                        if (IsOperator(infix[i + 1]))
+                        {
+                            postfix += infix[i];
+                            postfix += '|';
+                        }
+                        else
+                        {
+                            postfix += infix[i];
+                        }
+                    }
+                    else
+                    {
+                        postfix += infix[i];
+                    }
                 }
             }
             while (!stack.IsEmpty)
